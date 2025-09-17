@@ -1,0 +1,12 @@
+{
+  "ver": "1.0.0",
+  "importer": "*",
+  "imported": true,
+  "uuid": "ba9bbb8d-b6ae-4e2c-bd3f-7fba6099f76e",
+  "files": [
+    ".glsl",
+    ".json"
+  ],
+  "subMetas": {},
+  "userData": {}
+}
