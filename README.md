@@ -18,9 +18,11 @@
 
 **小游码匠** - 微信公众号
 
-![2D游戏角色总飘在空中？一文教你手搓实时影子Shader，角色瞬间落地！](https://mp.weixin.qq.com/s/4nnDDJyHjvhjruGRzgIwug)
+![](demo.gif)
 
-欢迎关注我的微信公众号【小游码匠】，获取更多游戏开发技巧和资源分享！
+[2D游戏角色总飘在空中？一文教你手搓实时影子Shader，角色瞬间落地！](https://mp.weixin.qq.com/s/4nnDDJyHjvhjruGRzgIwug)
+
+欢迎关注微信公众号【小游码匠】，获取更多游戏开发技巧和资源分享！
 
 ## 快速开始
 
