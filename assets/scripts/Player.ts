@@ -17,7 +17,7 @@ export class Player extends Component {
 
     update(deltaTime: number) {
         // this.clearTargetColor(deltaTime);
-        this.node.setWorldPosition(this.node.worldPosition.add(v3(.1, 0, 0)))
+        this.node.setWorldPosition(this.node.worldPosition.add(v3(.5, 0, 0)))
     }
 
     public init(): void {

@@ -51,6 +51,7 @@
         "z": 0,
         "w": 0.2
       },
+      "u_shadowXOffset": -0.05,
       "u_shadowYOffset": 0.12
     },
     {}
