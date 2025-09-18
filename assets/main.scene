@@ -456,7 +456,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "89e55b4f-0a16-4866-9729-17d958483711",
+      "__uuid__": "eb6ba4d7-6ff1-433a-b5d8-ec2a4aeee8c3",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,
