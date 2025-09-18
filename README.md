@@ -56,6 +56,9 @@ shadowEffect.shadowScale = 0.4;
 // 调整影子颜色和透明度
 shadowEffect.shadowColor = new Color(0, 0, 0, 0.6);
 
+// 调整影子X轴偏移
+shadowEffect.shadowXOffset = 0.1;
+
 // 调整影子Y轴偏移
 shadowEffect.shadowYOffset = 0.1;
 ```
@@ -67,6 +70,7 @@ shadowEffect.shadowYOffset = 0.1;
 | shadowSkew | Number | X方向斜切程度 | 0.5 | [-1.0, 1.0] |
 | shadowScale | Number | Y方向压扁程度 | 0.3 | [0.0, 1.0] |
 | shadowColor | Color | 影子颜色和透明度 | (0, 0, 0, 0.5) | - |
+| shadowXOffset | Number | X轴偏移量 | 0.0 | [-1.0, 1.0] |
 | shadowYOffset | Number | Y轴偏移量 | 0.0 | [-1.0, 1.0] |
 
 ## 示例场景
@@ -80,10 +84,11 @@ shadowEffect.shadowYOffset = 0.1;
 本系统使用自定义着色器实现光影效果，主要参数：
 
 ```glsl
-uniform shadow_params {
+layout(set = 2, binding = 0) uniform shadow_params {
     float u_shadowSkew;      // X方向斜切
     float u_shadowScale;     // Y方向压扁
     vec4 u_shadowColor;      // 阴影颜色和透明度
+    float u_shadowXOffset;   // Y轴偏移
     float u_shadowYOffset;   // Y轴偏移
 };
 ```
