@@ -11,10 +11,10 @@
   "_techIdx": 0,
   "_defines": [
     {
+      "USE_PIXEL_ALIGNMENT": true,
       "USE_TEXTURE": true
     },
     {
-      "USE_PIXEL_ALIGNMENT": true,
       "USE_ALPHA_TEST": true,
       "USE_TEXTURE": true
     }
@@ -51,8 +51,8 @@
         "z": 0,
         "w": 0.2
       },
-      "u_shadowXOffset": -0.051,
-      "u_shadowYOffset": 0.121
+      "u_shadowYOffset": 0.15,
+      "u_shadowXOffset": -0.1
     },
     {}
   ]

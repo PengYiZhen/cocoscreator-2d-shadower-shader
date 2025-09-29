@@ -10,6 +10,7 @@ export class Player extends Component {
     percentDir: number = 1;
     blue: number = 1.0; // 蓝色通道的阈值
     ss: number = null;
+    ySpeed: number = .2;
 
     start() {
         this.init();
@@ -17,7 +18,8 @@ export class Player extends Component {
 
     update(deltaTime: number) {
         // this.clearTargetColor(deltaTime);
-        this.node.setWorldPosition(this.node.worldPosition.add(v3(.1, 0, 0)))
+        this.node.setWorldPosition(this.node.worldPosition.add(v3(.1, this.ySpeed, 0)))
+        // this.shadowerFlowSprite();
     }
 
     public init(): void {
@@ -29,15 +31,32 @@ export class Player extends Component {
         this.material = this.getComponent(Sprite).material;
         this.ss = this.material.getProperty('u_shadowSkew') as number;
         const anim = this.getComponent(Animation);
-        anim.clips[0].wrapMode =  AnimationClip.WrapMode.Loop;
+        // const state = anim.getState("pao");
+        // state.speed = .5;
+        anim.clips[0].wrapMode = AnimationClip.WrapMode.Loop;
         anim.play("pao");
 
-        
+
 
         setTimeout(() => {
             console.log(this.material.getProperty("u_shadowSkew"))
             console.log(this.ss)
         })
+    }
+    /**
+     * @影子跟着Sprite
+     */
+    public shadowerFlowSprite(): void {
+        const wdps = this.node.position;
+        const y = this.material.getProperty("u_shadowXOffset") as any;
+        const x = this.material.getProperty("u_shadowXOffset") as any;
+        if (wdps.y > 0) {
+            this.material.setProperty("u_shadowXOffset", -wdps.y / 1000)
+            this.material.setProperty("u_shadowYOffset",  0.15 + wdps.y / 650)
+        }else if(wdps.y < 0) {
+            this.material.setProperty("u_shadowXOffset", -wdps.y /  1000)
+            this.material.setProperty("u_shadowYOffset",  0.15 + wdps.y /  650)
+        }
     }
     /**
      * @颜色混淆
@@ -73,5 +92,7 @@ export class Player extends Component {
             this.material.setProperty('blue', this.percent);
         }
     }
+
+    
 }
 
