@@ -43,15 +43,10 @@
   ],
   "_props": [
     {
-      "u_shadowScale": 0.5,
-      "u_shadowColor": {
-        "__type__": "cc.Vec4",
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 0.2
-      },
-      "u_shadowYOffset": 0.02
+      "u_shadowSkew": 0.73,
+      "u_shadowScale": 0.56,
+      "u_shadowYOffset": 0.25,
+      "u_shadowXOffset": -0.22
     },
     {}
   ]

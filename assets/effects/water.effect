@@ -1,0 +1,169 @@
+// Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: water-vs:vert
+      frag: water-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        alphaThreshold: { value: 0.5 }
+        u_timeScale: { value: 1.0, editor: { range: [0.0, 3.0], step: 0.01 }  }
+        speed_x: { value: -0.5, editor: { step: 0.01 } }
+        speed_y: { value: 0.1, editor: { step: 0.01 } }
+        emboss: { value: 0.02, editor: { step: 0.001 } }
+        intensity: { value: 2.4, editor: { step: 0.1 } }
+        steps: { value: 20.0, editor: { step: 1.0 } }
+        frequency: { value: 20.0, editor: { step: 1.0 } }
+        angle: { value: 90.0, editor: { step: 1.0 } }
+        delta: { value: 20.0, editor: { step: 1.0 } }
+        gain: { value: 700.0, editor: { step: 10.0 } }
+}%
+
+CCProgram water-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #if USE_LOCAL
+    #include <builtin/uniforms/cc-local>
+  #endif
+  #if SAMPLE_FROM_RT
+    #include <common/common-define>
+  #endif
+  
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec4 v_color;
+  out vec2 v_uv0;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if USE_LOCAL
+      pos = cc_matWorld * pos;
+    #endif
+
+    #if USE_PIXEL_ALIGNMENT
+      pos = cc_matView * pos;
+      pos.xyz = floor(pos.xyz);
+      pos = cc_matProj * pos;
+    #else
+      pos = cc_matViewProj * pos;
+    #endif
+
+    v_uv0 = a_texCoord;
+    #if SAMPLE_FROM_RT
+      CC_HANDLE_RT_SAMPLE_FLIP(v_uv0);
+    #endif
+    v_color = a_color;
+
+    return pos;
+  }
+}%
+
+CCProgram water-fs %{
+  precision highp float;
+  #include <builtin/internal/embedded-alpha>
+  #include <builtin/internal/alpha-test>
+  #include <builtin/uniforms/cc-global>
+
+  #define PI 3.1415926535897932
+
+  in vec4 v_color;
+  in vec2 v_uv0; 
+
+  #if USE_TEXTURE 
+    #pragma builtin(local)
+    layout(set = 2, binding = 12) uniform sampler2D cc_spriteTexture;
+  #endif
+
+  layout(set = 2, binding = 0) uniform WaterParams {
+    float u_timeScale;
+    float speed_x;
+    float speed_y;
+    float emboss;
+    float intensity;
+    float steps;
+    float frequency;
+    float angle;
+    float delta;
+    float gain;
+  };
+
+  float waterCol(vec2 coord, float time)
+  {
+    float delta_theta = 2.0 * PI / angle;
+    float col_val = 0.0;
+    float theta = 0.0;
+    
+    // 使用固定循环，但根据steps参数控制实际迭代次数
+    int maxSteps = int(steps);
+    for (int i = 0; i < 50; i++)  // 增加最大循环次数
+    {
+      if (i >= maxSteps) break;  // 根据实际steps参数提前退出
+      
+      vec2 adjc = coord;
+      float speed = 0.2;
+      theta = delta_theta * float(i);
+      adjc.x += cos(theta) * time * speed + time * speed_x;
+      adjc.y -= sin(theta) * time * speed - time * speed_y;
+      col_val = col_val + cos((adjc.x * cos(theta) - adjc.y * sin(theta)) * frequency) * intensity;
+    }
+
+    return cos(col_val);
+  }
+
+  vec4 frag () {
+    float time_val = cc_time.x * u_timeScale;
+
+    vec2 p = v_uv0;
+    vec2 c1 = p;
+    vec2 c2 = p;
+    float cc1 = waterCol(c1, time_val);
+
+    // 计算X方向的偏移
+    c2.x += 1.0 / delta;
+    float dx = emboss * (cc1 - waterCol(c2, time_val)) / delta;
+
+    // 计算Y方向的偏移
+    c2.x = p.x;
+    c2.y += 1.0 / delta;
+    float dy = emboss * (cc1 - waterCol(c2, time_val)) / delta;
+
+    // 应用偏移
+    c1.x += dx * 1.0;
+    c1.y += dy * 1.0;
+
+    // 计算alpha值
+    float alpha = 1.0 + dot(dx, dy) * gain;
+    float reflectionCutOff = 0.012;
+    float reflectionIntensity = 500000.0;
+    // 反射效果
+    float ddx = dx - reflectionCutOff;
+    float ddy = dy - reflectionCutOff;
+    if (ddx > 0.0 && ddy > 0.0) {
+      alpha = pow(alpha, ddx * ddy * reflectionIntensity);
+    }
+    
+    #if USE_TEXTURE
+      vec4 texColor = CCSampleWithAlphaSeparated(cc_spriteTexture, c1);
+      vec4 o = texColor * alpha;
+    #else
+      vec4 o = vec4(1.0, 1.0, 1.0, 1.0) * alpha;
+    #endif
+
+    o *= v_color;
+    ALPHA_TEST(o);
+    return o;
+  }
+}%

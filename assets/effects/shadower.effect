@@ -16,12 +16,12 @@ CCEffect %{
       rasterizerState:
         cullMode: none 
       properties:
-        alphaThreshold: { value: 0.5, editor: { range: [-1.0, 1.0], step: 0.01,},  }
-        u_shadowSkew: { value: 0.5, editor: { step: 0.01, }, }      # X方向斜切 
-        u_shadowScale: { value: 0.3, editor: { step: 0.01, }, }     # Y方向压扁
-        u_shadowColor: { value: [0,0,0,0.5], }  # 阴影颜色
-        u_shadowYOffset: { value: 0.0,  editor: { range: [-1.0, 1.0], step: 0.01,},  }
-        u_shadowXOffset: { value: 0.0,  editor: { range: [-1.0, 1.0], step: 0.01,},  }
+        alphaThreshold: { value: 0.5, editor: { range: [0.0, 1.0], step: 0.01 } }
+        u_shadowSkew: { value: 0.5, editor: { range: [-2.0, 2.0], step: 0.01 } }      # X方向斜切 
+        u_shadowScale: { value: 0.3, editor: { range: [0.0, 1.0], step: 0.01 } }     # Y方向压扁
+        u_shadowColor: { value: [0,0,0,0.5], editor: { type: color } }  # 阴影颜色
+        u_shadowYOffset: { value: -0.1, editor: { range: [-1.0, 1.0], step: 0.01 } }
+        u_shadowXOffset: { value: 0.0, editor: { range: [-1.0, 1.0], step: 0.01 } }
 
     - vert: sprite-vs:vert 
       frag: sprite-fs:frag
@@ -50,7 +50,7 @@ CCProgram shadower-vs %{
     #include <common/common-define>
   #endif
   
-  // 阴影参数 - 修正binding从0开始
+  // 阴影参数
   layout(set = 2, binding = 0) uniform ShadowParams {
     float u_shadowSkew;
     float u_shadowScale; 
@@ -64,49 +64,53 @@ CCProgram shadower-vs %{
 
   out vec4 color;
   out vec2 uv0;
-  vec4 firstPos;
 
   vec4 vert () {
     vec4 pos = vec4(a_position, 1);
-    vec4 firstPos = vec4(a_position, 1);
 
     #if USE_LOCAL
-      pos = cc_matWorld * pos;
-    #endif
 
-    // 原始位置计算
-    #if USE_PIXEL_ALIGNMENT
-      pos = cc_matView * pos;
-      pos.xyz = floor(pos.xyz);
-      pos = cc_matProj * pos;
-    #else
-      pos = cc_matViewProj * pos;
-    #endif
-
-    // 阴影位置计算（斜切+压扁效果）
-    vec4 shadowPos = vec4(a_position, 1);
-    #if USE_LOCAL
+      vec4 shadowPos = vec4(a_position, 1);
+      
+      // 创建阴影变换矩阵（斜切 + 压扁）
+      // 在模型空间应用变换，确保阴影与原始精灵保持正确的相对位置
+      shadowPos.x += (shadowPos.y * u_shadowSkew);
+      shadowPos.y = shadowPos.y * u_shadowScale;
+      
+      // 应用完整的世界变换
       shadowPos = cc_matWorld * shadowPos;
+      
+      // 计算投影位置
+      #if USE_PIXEL_ALIGNMENT
+        shadowPos = cc_matView * shadowPos;
+        shadowPos.xyz = floor(shadowPos.xyz);
+        shadowPos = cc_matProj * shadowPos;
+      #else 
+        shadowPos = cc_matViewProj * shadowPos;
+      #endif
+      
+      // 应用屏幕空间偏移
+      shadowPos.xy += vec2(u_shadowXOffset, u_shadowYOffset);
+      
+      pos = shadowPos;
+      
+    #else
+      // 如果没有局部坐标，使用简化版本
+      vec4 shadowPos = vec4(a_position, 1);
+      shadowPos.x += (shadowPos.y * u_shadowSkew);
+      shadowPos.y *= u_shadowScale;
+      
+      #if USE_PIXEL_ALIGNMENT
+        shadowPos = cc_matView * shadowPos;
+        shadowPos.xyz = floor(shadowPos.xyz);
+        shadowPos = cc_matProj * shadowPos;
+      #else 
+        shadowPos = cc_matViewProj * shadowPos;
+      #endif
+      
+      shadowPos.xy += vec2(u_shadowXOffset, u_shadowYOffset);
+      pos = shadowPos;
     #endif
-    
-    // 应用斜切效果（X方向）
-    shadowPos.x += shadowPos.y * u_shadowSkew;
-    // 应用压扁效果（Y方向）
-    shadowPos.y *= u_shadowScale;
-    
-    // 计算阴影的最终位置 
-    #if USE_PIXEL_ALIGNMENT
-      shadowPos = cc_matView * shadowPos; 
-      shadowPos.xyz = floor(shadowPos.xyz);
-      shadowPos = cc_matProj * shadowPos;
-    #else 
-      shadowPos = cc_matViewProj * shadowPos;
-    #endif
-    
-    shadowPos.y += u_shadowYOffset; 
-    shadowPos.x += u_shadowXOffset;  
-    // 选择使用阴影位置
-    pos = shadowPos;
 
     uv0 = a_texCoord;
     #if SAMPLE_FROM_RT
@@ -114,12 +118,9 @@ CCProgram shadower-vs %{
     #endif
     color = a_color;
 
-
     return pos;
   }
 }%
-
-
 
 CCProgram sprite-vs %{
   precision highp float;
@@ -162,13 +163,12 @@ CCProgram sprite-vs %{
   }
 }%
 
-
 CCProgram shadower-fs %{
   precision highp float;
   #include <builtin/internal/embedded-alpha>
   #include <builtin/internal/alpha-test>
 
-  // 阴影颜色 - 修正binding为连续值
+  // 阴影颜色
   layout(set = 2, binding = 1) uniform ShadowColor {
     vec4 u_shadowColor;
   };
@@ -196,11 +196,15 @@ CCProgram shadower-fs %{
     o.rgb = u_shadowColor.rgb;
     o.a *= u_shadowColor.a;
 
+    // 根据原始纹理的alpha值调整阴影透明度
+    #if USE_TEXTURE
+      o.a *= CCSampleWithAlphaSeparated(cc_spriteTexture, uv0).a;
+    #endif
+
     ALPHA_TEST(o);
     return o;
   }
 }%
-
 
 CCProgram sprite-fs %{
   precision highp float;

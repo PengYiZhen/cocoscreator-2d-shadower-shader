@@ -5,16 +5,16 @@
   "__editorExtras__": {},
   "_native": "",
   "_effectAsset": {
-    "__uuid__": "cd603448-516b-462a-83ca-a7101ff00c36",
+    "__uuid__": "e5c6b932-07b1-4e87-9127-7d22b9875314",
     "__expectedType__": "cc.EffectAsset"
   },
   "_techIdx": 0,
   "_defines": [
     {
-      "USE_PIXEL_ALIGNMENT": true,
       "USE_TEXTURE": true
     },
     {
+      "USE_LOCAL": true,
       "USE_ALPHA_TEST": true,
       "USE_TEXTURE": true
     }
@@ -44,15 +44,7 @@
   "_props": [
     {
       "u_shadowScale": 0.5,
-      "u_shadowColor": {
-        "__type__": "cc.Vec4",
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 0.2
-      },
-      "u_shadowYOffset": 0.15,
-      "u_shadowXOffset": -0.1
+      "u_shadowYOffset": 0.02
     },
     {}
   ]
