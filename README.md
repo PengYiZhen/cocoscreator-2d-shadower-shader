@@ -23,7 +23,9 @@
 
 **小游码匠** - 微信公众号
 
-![](demo.gif)
+![](./README_RES/demo.gif)
+![](./README_RES/water.gif)
+![](./README_RES/water1.gif)
 
 [2D游戏角色总飘在空中？一文教你手搓实时影子Shader，角色瞬间落地！](https://mp.weixin.qq.com/s/4nnDDJyHjvhjruGRzgIwug)
 
